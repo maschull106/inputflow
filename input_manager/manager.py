@@ -1,28 +1,26 @@
 from __future__ import annotations
-from typing import Any
-import evdev
-import evdev.events
 import threading
-from time import sleep
-import math
-import itertools
-import copy
 from dataclasses import dataclass
 from collections.abc import Callable
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, TypeVar, Generic
+
+
+T = TypeVar("T")
+EventType = TypeVar("EventType")
+IdType = TypeVar("IdType")
 
 
 @dataclass
 class EventInfo:
-    input: EventManager.InputType
+    input: int
     event_value: float
 
 
-class EventFuncWrapper:
+class EventFuncWrapper(Generic[T]):
     """
     keeping information about a function to be called upon a certain event, the function must take the event value as a parameter
     """
-    def __init__(self, func: Callable = None, event_value_arg_name: str = "", **kwargs):
+    def __init__(self, func: Callable[..., T] = None, event_value_arg_name: str = "", **kwargs):
         """
         :param func: the function to call
         :param event_value_arg_name: the name of the function's parameter for the event value (if none is given, the event value won't be passed to the function)
@@ -36,7 +34,7 @@ class EventFuncWrapper:
         if event_value_arg_name:
             self.kwargs[event_value_arg_name] = None
     
-    def __call__(self, event_value) -> Any:
+    def __call__(self, event_value: float) -> T:
         if self.event_value_arg_name:
             self.kwargs[self.event_value_arg_name] = event_value
         return self.func(**self.kwargs)
@@ -57,7 +55,7 @@ class MetaEventManager(type):
             self.DEFAULT_IDS = default_ids | self.DEFAULT_IDS
 
 
-class EventManager(metaclass=MetaEventManager):
+class EventManager(Generic[EventType, IdType], metaclass=MetaEventManager):
     """
     (abstract class)
     Handler for input events giving a continuous value (and also discrete values which are treated as continuous values)
@@ -65,8 +63,6 @@ class EventManager(metaclass=MetaEventManager):
     Comprises input ids, value offsets and amplitudes.
     Also allows to bind functions to be called upon the event of a certain input.
     """
-
-    InputType = int | str
     
     def __init__(self, **kwargs):
         """
@@ -74,7 +70,7 @@ class EventManager(metaclass=MetaEventManager):
             All parameters need to be given as keyword arguments in the format [name of input]_id, [name of input]_offset and [name of input]_amplitude.
             Default ids are given by EventHandlerConfig.DEFAULT_IDS, default offsets are set to 0,  default amplitudes are set to 1.
         """
-        self.input_ids : Dict[int, int] = {}
+        self.input_ids : Dict[int, IdType] = {}
         self.input_offsets : Dict[int, float] = {self.NULL: 0.0}
         self.input_amplitudes : Dict[int, float] = {self.NULL: 1.0}
         for input, name in self.INPUTS.items():
@@ -86,7 +82,7 @@ class EventManager(metaclass=MetaEventManager):
             self.input_amplitudes[input] = kwargs.get(attr, 1.0)
         self.smoothing_epsilon = kwargs.get("smoothing_epsilon", 0)
         # dict of inputs correspondig to ids (if multiple inputs have the same id, for instance -1, the behaviour is undefined)
-        self.reverse_id_dict : Dict[int, int] = {}
+        self.reverse_id_dict : Dict[IdType, int] = {}
         for inp, id in self.input_ids.items():
             self.reverse_id_dict[id] = inp
         self.fast_id_finding = True
@@ -94,7 +90,7 @@ class EventManager(metaclass=MetaEventManager):
         # list of functions to be called on event for every input
         self.event_signals : Dict[int, List[Callable]] = {k: [] for k in self.INPUTS}
 
-    def bind(self, input: EventManager.InputType, func: Callable, event_value_arg_name: str = "", **kwargs) -> None:
+    def bind(self, input: int, func: Callable, event_value_arg_name: str = "", **kwargs) -> None:
         """
         Bind a function call to the trigger event of a certain input.
         :param input: an input type
@@ -106,11 +102,11 @@ class EventManager(metaclass=MetaEventManager):
             self.event_signals[input].append(EventFuncWrapper(func, event_value_arg_name, **kwargs))
     
     def bind_all(
-            self, 
-            func: Callable[[float], Any], 
-            event_value_arg_name: str = "", 
-            provide_input_origin: bool = False, 
-            input_origin_arg_name: str = "input_origin", 
+            self,
+            func: Callable,
+            event_value_arg_name: str = "",
+            provide_input_origin: bool = False,
+            input_origin_arg_name: str = "input_origin",
             **kwargs
         ) -> None:
         """
@@ -121,7 +117,7 @@ class EventManager(metaclass=MetaEventManager):
                 kwargs[input_origin_arg_name] = input
             self.bind(input, func, event_value_arg_name, **kwargs)
 
-    def find_input(self, id) -> int:
+    def find_input(self, id: IdType) -> int:
         """
         Determine the input that has the given id.
         :return: an input type
@@ -133,23 +129,23 @@ class EventManager(metaclass=MetaEventManager):
                 return input
         return self.NULL
 
-    def valid_event(self, event: Any) -> bool:
+    def valid_event(self, event: EventType) -> bool:
         """
         A check that the event is valid.
-        Should be overriden to match the specific event type of the child class.
+        Should be overridden to match the specific event type of the child class.
         """
         return True
     
-    def get_event_id(self, event: Any) -> int:
+    def get_event_id(self, event: EventType) -> IdType:
         """
         Extract a usable event id.
-        Should be overriden to match the specific event type of the child class.
+        Should be overridden to match the specific event type of the child class.
         """
         return self.NULL
 
-    def get_event_raw_value(self, event: Any) -> float:
+    def get_event_raw_value(self, event: EventType) -> float:
         """
-        Should be overriden
+        Should be overridden
         """
         return 1.0
     
@@ -158,14 +154,14 @@ class EventManager(metaclass=MetaEventManager):
             return 0.0
         return value
     
-    def get_event_value(self, input: EventManager.InputType, raw_value: float) -> float:
+    def get_event_value(self, input: int, raw_value: float) -> float:
         offset = self.input_offsets[input]
         amplitude = self.input_amplitudes[input]
         event_value = (raw_value - offset) / amplitude
         event_value = self.smoothen(event_value)
         return event_value
     
-    def get_event_info(self, event) -> EventInfo:
+    def get_event_info(self, event: EventType) -> EventInfo:
         event_id = self.get_event_id(event)
         input = self.find_input(event_id)
         raw_value = self.get_event_raw_value(event)
@@ -175,7 +171,7 @@ class EventManager(metaclass=MetaEventManager):
             event_value=event_value
         )
 
-    def handle_event(self, event) -> None:
+    def handle_event(self, event: EventType) -> None:
         """
         Obtains the event info then calls then calls emit_signal for treatment of the event and calling of the binded functions
         """
@@ -195,21 +191,26 @@ class EventManager(metaclass=MetaEventManager):
         for func in self.event_signals[event_info.input]:
             func(event_info.event_value)
 
-    def read_inputs(self):
+    def read_inputs(self) -> None:
         """
         Override this method to read the inputs of the specific device
         """
         pass
     
-    def loop(self):
+    def loop(self) -> None:
         while True:
             self.read_inputs()
 
-    def background_loop(self, daemon: bool = True):
+    def background_loop(self, daemon: bool = True) -> None:
         thread = threading.Thread(target=self.loop, daemon=daemon)
         thread.start()
     
-    def connect_events(src_handler: EventManager, src_input: EventManager.InputType, target_handler: EventManager, target_input: EventManager.InputType):
+    def connect_events(
+            src_handler: EventManager,
+            src_input: int,
+            target_handler: EventManager,
+            target_input: int
+        ) -> None:
         """
         Connect an input from one handler to an input of another handler
         """

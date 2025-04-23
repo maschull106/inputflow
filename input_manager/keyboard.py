@@ -1,9 +1,11 @@
 from .manager import *
 import keyboard
 import keyboard._keyboard_event
+import copy
+from typing import Tuple
 
 
-class KeyboardConfig(EventManager):
+class KeyboardConfig(EventManager[keyboard._keyboard_event.KeyboardEvent, str]):
     """
     Handler for keyboard
     """
@@ -19,7 +21,7 @@ class KeyboardConfig(EventManager):
         super().__init__(**kwargs)
     
     @classmethod
-    def _set_inputs_as_class_attributes(cls, os_keyboard_inputs: Dict[str, List[Tuple[int, Tuple[str, ...]]]]):
+    def _set_inputs_as_class_attributes(cls, os_keyboard_inputs: Dict[str, List[Tuple[int, Tuple[str, ...]]]]) -> None:
         cls.INPUTS = {}
         for ind, key in enumerate(os_keyboard_inputs):
             if key.isalpha():

@@ -1,7 +1,10 @@
 from .manager import *
+import evdev
+import evdev.events
+import time
 
 
-class GamePadConfig(EventManager):
+class GamePadConfig(EventManager[evdev.events.InputEvent, int]):
     """
     Handler for a gamepad using the evdev package
     """
@@ -75,9 +78,9 @@ class GamePadConfig(EventManager):
                     continue
                 print(f"Will connect to gamepad device [{device}]")
                 return device
-            sleep(1)
+            time.sleep(1)
 
-    def read_inputs(self):
+    def read_inputs(self) -> None:
         """
         Overrides parent method
         """
@@ -88,7 +91,7 @@ class GamePadConfig(EventManager):
         except (TypeError, IOError) as e:
             raise
     
-    def _get_additional_init_kwords(self):
+    def _get_additional_init_kwords(self) -> Dict[str, int]:
         """
         Get custom parameters corresponding to the detected device (returns empty dict if the device name is not known)
         """

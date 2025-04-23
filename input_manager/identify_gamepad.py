@@ -11,7 +11,7 @@ def connect() -> evdev.InputDevice:
         time.sleep(1)
 
 
-def read_inputs(device: evdev.InputDevice):
+def read_inputs(device: evdev.InputDevice) -> None:
     try:
         for event in device.read_loop():
             print(event.code)
@@ -21,7 +21,7 @@ def read_inputs(device: evdev.InputDevice):
         raise
         
 
-def loop():
+def loop() -> None:
     device = connect()
     while True:
         read_inputs(device)
