@@ -104,6 +104,22 @@ class EventManager(metaclass=MetaEventManager):
         """
         if input in self.INPUTS:
             self.event_signals[input].append(EventFuncWrapper(func, event_value_arg_name, **kwargs))
+    
+    def bind_all(
+            self, 
+            func: Callable[[float], Any], 
+            event_value_arg_name: str = "", 
+            provide_input_origin: bool = False, 
+            input_origin_arg_name: str = "input_origin", 
+            **kwargs
+        ) -> None:
+        """
+        Bind the same function call to the trigger event of all inputs at once.
+        """
+        for input in self.INPUTS:
+            if provide_input_origin:
+                kwargs[input_origin_arg_name] = input
+            self.bind(input, func, event_value_arg_name, **kwargs)
 
     def find_input(self, id) -> int:
         """
