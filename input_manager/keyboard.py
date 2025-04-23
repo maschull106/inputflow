@@ -1,18 +1,27 @@
 from .manager import *
 import keyboard
 import keyboard._keyboard_event
-keyboard._os_keyboard.init()
-
-OS_KEYBOARD_INPUTS = copy.deepcopy(keyboard._os_keyboard.from_name)
-OS_KEYBOARD_INPUTS: Dict[str, List[Tuple[int, Tuple[str, ...]]]]
-for inp in ("A", "D", "M", "N", "O", "P"): OS_KEYBOARD_INPUTS[inp] = []
 
 
-class _KeyboardConfig(EventManager):
+class KeyboardConfig(EventManager):
+    """
+    Handler for keyboard
+    """
+    
+    def __init__(self, **kwargs):
+        keyboard._os_keyboard.init()
+
+        os_keyboard_inputs = copy.deepcopy(keyboard._os_keyboard.from_name)
+        for inp in ("A", "D", "M", "N", "O", "P"): os_keyboard_inputs[inp] = []
+        KeyboardConfig._set_inputs_as_class_attributes(os_keyboard_inputs)
+
+        keyboard.hook(self.handle_event)
+        super().__init__(**kwargs)
+    
     @classmethod
-    def _set_inputs_as_class_attributes(cls):
+    def _set_inputs_as_class_attributes(cls, os_keyboard_inputs: Dict[str, List[Tuple[int, Tuple[str, ...]]]]):
         cls.INPUTS = {}
-        for ind, key in enumerate(OS_KEYBOARD_INPUTS):
+        for ind, key in enumerate(os_keyboard_inputs):
             if key.isalpha():
                 name = key
             elif key.isnumeric():
@@ -21,21 +30,7 @@ class _KeyboardConfig(EventManager):
                 continue
             setattr(cls, name, ind)
             cls.INPUTS[ind] = key
-
-
-_KeyboardConfig._set_inputs_as_class_attributes()
-
-
-class KeyboardConfig(_KeyboardConfig):
-    """
-    Handler for keyboard
-    """
-    
-    DEFAULT_IDS = {inp: keyboard._canonical_names.normalize_name(key) for inp, key in _KeyboardConfig.INPUTS.items()}
-    
-    def __init__(self, **kwargs):
-        keyboard.hook(self.handle_event)
-        super().__init__(**kwargs)
+        cls.DEFAULT_IDS = {inp: keyboard._canonical_names.normalize_name(key) for inp, key in cls.INPUTS.items()}
     
     def get_event_id(self, event: keyboard._keyboard_event.KeyboardEvent) -> str:
         """
