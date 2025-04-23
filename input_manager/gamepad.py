@@ -34,7 +34,13 @@ class GamePadConfig(EventManager):
     INPUTS = BUTTONS | ANALOG_TRIGGERS
     DEFAULT_IDS = {L1: 310, R1: 311, L2: 2, R2: 5, PS: 316, LH: 0, LV: 1, RH: 3, RV: 4, DIRH: 16, DIRV: 17, TRIANGLE: 307, SQUARE: 308, CIRCLE: 305, CROSS: 304}
 
-    KNOWN_DEVICES = {"Generic X-Box pad", "Wireless Controller", "Xbox Wireless Controller", "SZMY-POWER CO.,LTD. PLAYSTATION(R)3 Controller"}
+    KNOWN_DEVICES = {
+        "Generic X-Box pad",
+        "Wireless Controller",
+        "Sony Interactive Entertainment Wireless Controller",
+        "Xbox Wireless Controller",
+        "SZMY-POWER CO.,LTD. PLAYSTATION(R)3 Controller"
+    }
 
     def __init__(self, **kwargs):
         self.device = self.connect()
@@ -65,8 +71,9 @@ class GamePadConfig(EventManager):
         while True:
             for device in map(evdev.InputDevice, evdev.list_devices()):
                 if device.name.strip() not in self.KNOWN_DEVICES:
+                    print(f"Found unknown gamepad device [{device}]")
                     continue
-                print(device)
+                print(f"Will connect to gamepad device [{device}]")
                 return device
             sleep(1)
 
@@ -99,6 +106,23 @@ class GamePadConfig(EventManager):
                 "L2_amplitude": 2**8
             }
         elif self.device.name == "Wireless Controller":
+            return {
+                "circle_id": 305,
+                "triangle_id": 307,
+                "square_id": 308,
+                "cross_id": 304,
+                "RH_offset": 2**7,
+                "RV_offset": 2**7,
+                "LH_offset": 2**7,
+                "LV_offset": 2**7,
+                "RH_amplitude": 2**7,
+                "RV_amplitude": -2**7,
+                "LH_amplitude": 2**7,
+                "LV_amplitude": -2**7,
+                "R2_amplitude": 2**8,
+                "L2_amplitude": 2**8
+            }
+        elif self.device.name == "Sony Interactive Entertainment Wireless Controller":
             return {
                 "circle_id": 305,
                 "triangle_id": 307,
