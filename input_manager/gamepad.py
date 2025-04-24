@@ -4,7 +4,7 @@ import evdev.events
 import time
 
 
-class GamePadConfig(EventManager[evdev.events.InputEvent, int]):
+class GamePadConfig(EventManagerFixedInputList[evdev.events.InputEvent, int, int]):
     """
     Handler for a gamepad using the evdev package
     """

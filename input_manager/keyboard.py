@@ -5,7 +5,7 @@ import copy
 from typing import Tuple
 
 
-class KeyboardConfig(EventManager[keyboard._keyboard_event.KeyboardEvent, str]):
+class KeyboardConfig(EventManagerFixedInputList[keyboard._keyboard_event.KeyboardEvent, str, int]):
     """
     Handler for keyboard
     """
