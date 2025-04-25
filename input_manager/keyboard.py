@@ -1,9 +1,7 @@
 from .manager import *
 from typing import Any
 import enum
-import pynput
-import pynput.keyboard._base as base
-import pynput.keyboard._xorg as xorg
+import pynput.keyboard as kbrd
 
 
 class KeyAction(enum.Enum):
@@ -12,8 +10,8 @@ class KeyAction(enum.Enum):
 
 
 class PynputKeyboardEvent:
-    def __init__(self, key: base.KeyCode | xorg.Key, action: KeyAction):
-        if isinstance(key, pynput.keyboard._base.KeyCode):
+    def __init__(self, key: kbrd.KeyCode | kbrd.Key, action: KeyAction):
+        if isinstance(key, kbrd.KeyCode):
             _key = key
         elif isinstance(key, enum.Enum):
             _key = key.value
@@ -23,18 +21,18 @@ class PynputKeyboardEvent:
         self.action = action
 
 
-def str_to_keycode(name: str) -> base.KeyCode:
+def str_to_keycode(name: str) -> kbrd.KeyCode:
     try:
-        return xorg.Key.__members__[name].value
+        return kbrd.Key.__members__[name].value
     except KeyError as e:
-        return xorg.KeyCode.from_char(name)
+        return kbrd.KeyCode.from_char(name)
 
 
 class KeyboardConfigMeta(type):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
-        self.SPECIAL_KEYS = xorg.Key
-        self.SPECIAL_KEYS_NAMES = {key.value: key.name for key in xorg.Key.__members__.values()}
+        self.SPECIAL_KEYS = kbrd.Key
+        self.SPECIAL_KEYS_NAMES = {key.value: key.name for key in kbrd.Key.__members__.values()}
     
     def __getattribute__(self, name: str) -> Any:
         try:
@@ -43,48 +41,42 @@ class KeyboardConfigMeta(type):
             return str_to_keycode(name)
 
 
-class KeyboardConfig(EventManager[PynputKeyboardEvent, base.KeyCode, base.KeyCode], metaclass=KeyboardConfigMeta):
+class KeyboardConfig(EventManager[PynputKeyboardEvent, kbrd.KeyCode, kbrd.KeyCode], metaclass=KeyboardConfigMeta):
     """
     Handler for keyboard
     """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.listener = pynput.keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
+        self.listener = kbrd.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
     
-    def _on_press(self, key: base.KeyCode | xorg.Key) -> None:
+    def _on_press(self, key: kbrd.KeyCode | kbrd.Key) -> None:
         self.handle_event(
             PynputKeyboardEvent(key, KeyAction.PRESS)
         )
     
-    def _on_release(self, key: base.KeyCode | xorg.Key) -> None:
+    def _on_release(self, key: kbrd.KeyCode | kbrd.Key) -> None:
         self.handle_event(
             PynputKeyboardEvent(key, KeyAction.RELEASE)
         )
         
-    def is_input_valid(self, input: str) -> bool:
-        return True
+    def is_input_valid(self, input: kbrd.KeyCode) -> bool:
+        return isinstance(input, kbrd.KeyCode)
     
-    def get_input_id(self, input: str) -> str:
+    def get_input_id(self, input: kbrd.KeyCode) -> kbrd.KeyCode:
         return input
     
-    def get_input_offset(self, input: str) -> float:
-        return 0.0
-    
-    def get_input_amplitude(self, input: str) -> float:
-        return 1.0
-    
-    def find_input(self, id: str) -> str:
+    def find_input(self, id: kbrd.KeyCode) -> kbrd.KeyCode:
         return id
     
-    def get_event_id(self, event: PynputKeyboardEvent) -> str:
+    def get_event_id(self, event: PynputKeyboardEvent) -> kbrd.KeyCode:
         return event.key
     
     def get_event_raw_value(self, event: PynputKeyboardEvent) -> float:
         return 1.0 if event.action is KeyAction.PRESS else 0.0
     
-    def get_input_name(self, input: base.KeyCode) -> str:
+    def get_input_name(self, input: kbrd.KeyCode) -> str:
         if input.char is not None:
             return input.char
         try:
@@ -92,9 +84,9 @@ class KeyboardConfig(EventManager[PynputKeyboardEvent, base.KeyCode, base.KeyCod
         except KeyError:
             return str(input)
     
-    def make_input(self, input_like: base.KeyCode | xorg.Key | str) -> int:
+    def make_input(self, input_like: kbrd.KeyCode | kbrd.Key | str) -> int:
         try:
-            if isinstance(input_like, base.KeyCode):
+            if isinstance(input_like, kbrd.KeyCode):
                 return input_like
             if isinstance(input_like, enum.Enum):
                 return input_like.value

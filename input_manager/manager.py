@@ -95,20 +95,18 @@ class EventManager(Generic[EventType, IdType, InputType]): #, ABC):
         ...
     
     # @abstractmethod
-    def get_input_offset(self, input: InputType) -> float:
-        ...
-    
-    # @abstractmethod
-    def get_input_amplitude(self, input: InputType) -> float:
-        ...
-    
-    # @abstractmethod
     def find_input(self, id: IdType) -> InputType:
         """
         Determine the input that has the given id.
         :return: an input type
         """
         ...
+
+    def get_input_offset(self, input: InputType) -> float:
+        return 0.0
+    
+    def get_input_amplitude(self, input: InputType) -> float:
+        return 1.0
     
     def get_input_name(self, input: InputType) -> str:
         return str(input)
