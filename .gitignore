@@ -1,4 +1,5 @@
 build/
 dist/
-input_manager.egg-info/
+*.egg-info/
 */__pycache__/
+keyboard_legacy.py
