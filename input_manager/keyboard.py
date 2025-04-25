@@ -1,4 +1,4 @@
-from .manager import *
+from .flow_core import *
 from typing import Any
 import enum
 import pynput.keyboard as kbrd
@@ -28,7 +28,7 @@ def str_to_keycode(name: str) -> kbrd.KeyCode:
         return kbrd.KeyCode.from_char(name)
 
 
-class KeyboardConfigMeta(type):
+class KeyboardHandlerMeta(type):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
         self.SPECIAL_KEYS = kbrd.Key
@@ -41,7 +41,7 @@ class KeyboardConfigMeta(type):
             return str_to_keycode(name)
 
 
-class KeyboardConfig(EventManager[PynputKeyboardEvent, kbrd.KeyCode, kbrd.KeyCode], metaclass=KeyboardConfigMeta):
+class KeyboardConfig(HandlerCore[PynputKeyboardEvent, kbrd.KeyCode, kbrd.KeyCode], metaclass=KeyboardHandlerMeta):
     """
     Handler for keyboard
     """

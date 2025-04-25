@@ -1,10 +1,10 @@
-from .manager import *
+from .flow_core import *
 import evdev
 import evdev.events
 import time
 
 
-class GamePadConfig(EventManagerFixedInputList[evdev.events.InputEvent, int, int]):
+class GamePadConfig(FixedInputListHandler[evdev.events.InputEvent, int, int]):
     """
     Handler for a gamepad using the evdev package
     """
