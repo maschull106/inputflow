@@ -69,6 +69,16 @@ class GamePadConfig(EventManagerFixedInputList[evdev.events.InputEvent, int, int
         """
         return event.value
     
+    def make_input(self, input_like: str | int) -> int:
+        if isinstance(input_like, int):
+            return input_like
+        if not isinstance(input_like, str):
+            raise ValueError(f"Unable to interpret '{input_like}' as a gamepad input")
+        try:
+            return getattr(self, input_like.upper())
+        except AttributeError as e:
+            raise ValueError(f"Unable to interpret '{input_like}' as a gamepad input") from e
+    
     def connect(self) -> evdev.InputDevice:
         print("connecting to gamepad...")
         while True:

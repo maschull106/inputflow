@@ -2,7 +2,7 @@ from __future__ import annotations
 import threading
 from dataclasses import dataclass
 from collections.abc import Callable
-from typing import List, Dict, TypeVar, Generic
+from typing import List, Dict, TypeVar, Generic, Any
 from abc import ABC, abstractmethod
 
 
@@ -113,6 +113,9 @@ class EventManager(Generic[EventType, IdType, InputType]): #, ABC):
     def get_input_name(self, input: InputType) -> str:
         return str(input)
 
+    def make_input(self, input_like: Any) -> InputType:
+        return input_like
+    
     def bind(self, input: InputType, func: Callable, event_value_arg_name: str = "", **kwargs) -> None:
         """
         Bind a function call to the trigger event of a certain input.
@@ -121,6 +124,7 @@ class EventManager(Generic[EventType, IdType, InputType]): #, ABC):
         :param event_value_arg_name: the name of the function's parameter for the event value (if none is given, the event value won't be passed to the function)
         :param kwargs: other arguments of the function given as keyword arguments
         """
+        input = self.make_input(input)
         self.enforce_valid_input(input)
         # self.event_signals[input].append(EventFuncWrapper(func, event_value_arg_name, **kwargs))
         event_func = EventFuncWrapper(func, event_value_arg_name, **kwargs)
