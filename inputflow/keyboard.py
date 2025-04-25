@@ -41,7 +41,7 @@ class KeyboardHandlerMeta(type):
             return str_to_keycode(name)
 
 
-class KeyboardConfig(HandlerCore[PynputKeyboardEvent, kbrd.KeyCode, kbrd.KeyCode], metaclass=KeyboardHandlerMeta):
+class KeyboardHandler(HandlerCore[PynputKeyboardEvent, kbrd.KeyCode, kbrd.KeyCode], metaclass=KeyboardHandlerMeta):
     """
     Handler for keyboard
     """
@@ -80,7 +80,7 @@ class KeyboardConfig(HandlerCore[PynputKeyboardEvent, kbrd.KeyCode, kbrd.KeyCode
         if input.char is not None:
             return input.char
         try:
-            return KeyboardConfig.SPECIAL_KEYS_NAMES[input]
+            return KeyboardHandler.SPECIAL_KEYS_NAMES[input]
         except KeyError:
             return str(input)
     
@@ -97,4 +97,4 @@ class KeyboardConfig(HandlerCore[PynputKeyboardEvent, kbrd.KeyCode, kbrd.KeyCode
             raise ValueError(f"Unable to interpret '{input_like}' as a keyboard input")
 
 
-SPECIAL_KEYS = KeyboardConfig.SPECIAL_KEYS
+SPECIAL_KEYS = KeyboardHandler.SPECIAL_KEYS
