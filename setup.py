@@ -16,7 +16,7 @@ setup(
         description=DESCRIPTION,
         long_description=LONG_DESCRIPTION,
         long_description_content_type="text/markdown",
-        url="https://github.com/yourusername/inputflow",
+        url="https://github.com/maschull106/inputflow.git",
         packages=find_packages(),
         python_requires=">=3.9",
         install_requires=[
