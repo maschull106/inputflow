@@ -233,7 +233,7 @@ class FixedInputListHandlerMeta(type):
     def __init__(self, *args, **kwargs):
         self.NULL = -1
         if not hasattr(self, "INPUTS"):
-            self.INPUTS = {}
+            self.INPUTS = {self.NULL: "NULL"}
         default_ids = {inp: -1 for inp in self.INPUTS}
         if not hasattr(self, "DEFAULT_IDS"):
             self.DEFAULT_IDS = default_ids

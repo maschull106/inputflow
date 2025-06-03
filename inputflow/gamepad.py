@@ -34,7 +34,7 @@ class GamepadHandler(FixedInputListHandler[evdev.events.InputEvent, int, int]):
     
     BUTTONS = {TRIANGLE: "triangle", SQUARE: "square", CIRCLE: "circle", CROSS: "cross", L1: "L1", R1: "R1", L3: "L3", R3: "R3", CREATE: "create", OPTIONS: "options", PS: "PS", TOUCHPAD: "touchpad"}
     ANALOG_TRIGGERS = {RH: "RH", RV: "RV", LH: "LH", LV: "LV", L2: "L2", R2: "R2", DIRH: "dirH", DIRV: "dirV"}
-    INPUTS = BUTTONS | ANALOG_TRIGGERS
+    INPUTS = {NULL: "NULL"} | BUTTONS | ANALOG_TRIGGERS
     DEFAULT_IDS = {L1: 310, R1: 311, L2: 2, R2: 5, PS: 316, LH: 0, LV: 1, RH: 3, RV: 4, DIRH: 16, DIRV: 17, TRIANGLE: 307, SQUARE: 308, CIRCLE: 305, CROSS: 304}
 
     KNOWN_DEVICES = {
@@ -42,7 +42,10 @@ class GamepadHandler(FixedInputListHandler[evdev.events.InputEvent, int, int]):
         "Wireless Controller",
         "Sony Interactive Entertainment Wireless Controller",
         "Xbox Wireless Controller",
-        "SZMY-POWER CO.,LTD. PLAYSTATION(R)3 Controller"
+        "SZMY-POWER CO.,LTD. PLAYSTATION(R)3 Controller",
+        "QIXIONG PC Gamepad",
+        "PC Gamepad",
+        "QIXIONG",
     }
 
     def __init__(self, **kwargs):
@@ -233,4 +236,45 @@ class GamepadHandler(FixedInputListHandler[evdev.events.InputEvent, int, int]):
                 "dirV_amplitude":-1,
                 
                 "smoothing_epsilon": 0.1
+            }
+        
+        elif self.device.name in ("QIXIONG PC Gamepad", "PC Gamepad", "QIXIONG"):
+            return {
+                "circle_id": 305, #B
+                "triangle_id": 308, #Y
+                "square_id": 307, #X
+                "cross_id": 304, #A
+
+                "RH_id": 2,
+                "RV_id": 5,
+                "LH_id": 0,
+                "LV_id": 1,
+                "RH_offset": 128,
+                "RV_offset": 128,
+                "LH_offset": 128,
+                "LV_offset": 128,
+                "RH_amplitude": 128,
+                "RV_amplitude": -128,
+                "LH_amplitude": 128,
+                "LV_amplitude": -128,
+
+                "R2_id": 9,
+                "L2_id": 10,
+                "R2_amplitude": 255,
+                "L2_amplitude": 255,
+                "R2_offset": 0,
+                "L2_offset": 0,
+
+                "PS_id":316,
+
+                "R1_id": 311,
+                "L1_id": 310,
+
+                "R3_id":318,
+                "L3_id":317, 
+
+                "dirH_amplitude":-1,
+                "dirV_amplitude":-1,
+                
+                "smoothing_epsilon": 0.01
             }
